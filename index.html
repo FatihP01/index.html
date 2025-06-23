@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Star AI</title>
+  <style>
+    body {
+      margin: 0;
+      background: #1e1e1e;
+      color: white;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .chat-wrapper {
+      width: 100%;
+      max-width: 700px;
+      height: 90vh;
+      background: #2c2c2c;
+      border-radius: 10px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.7);
+    }
+    .chat-header {
+      background: #181818;
+      padding: 15px;
+      text-align: center;
+      font-weight: bold;
+      font-size: 20px;
+    }
+    .chat-messages {
+      flex: 1;
+      padding: 15px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+    .message {
+      max-width: 75%;
+      padding: 12px 16px;
+      margin-bottom: 15px;
+      border-radius: 12px;
+      line-height: 1.4;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      position: relative;
+    }
+    .user {
+      background: #1e3a5f;
+      color: white;
+      align-self: flex-end;
+      border-bottom-right-radius: 0;
+    }
+    .bot {
+      background: #3a3a3a;
+      color: white;
+      align-self: flex-start;
+      border-bottom-left-radius: 0;
+    }
+    .timestamp {
+      font-size: 0.7em;
+      color: #bbb;
+      position: absolute;
+      bottom: 4px;
+      right: 8px;
+      user-select: none;
+    }
+    .chat-input {
+      display: flex;
+      border-top: 1px solid #444;
+      background: #181818;
+      padding: 10px;
+    }
+    .chat-input textarea {
+      flex: 1;
+      resize: none;
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 8px;
+      border: none;
+      outline: none;
+      background: #1e1e1e;
+      color: white;
+      height: 60px;
+    }
+    .chat-input button {
+      padding: 0 20px;
+      margin-left: 10px;
+      font-size: 16px;
+      background: #1e3a5f;
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 8px;
+    }
+    .chat-input button:hover {
+      background: #173251;
+    }
+  </style>
+</head>
+<body>
+  <div class="chat-wrapper">
+    <div class="chat-header">💬 Star AI Türkçe Dil Destekli Yapay Zeka Chatbot</div>
+    <div class="chat-messages" id="chatMessages"></div>
+    <div class="chat-input">
+      <textarea id="messageInput" placeholder="Mesajınızı yazın..."></textarea>
+      <button onclick="sendMessage()">Gönder</button>
+    </div>
+  </div>
+
+  <script>
+    const chatMessages = document.getElementById("chatMessages");
+    const messageInput = document.getElementById("messageInput");
+
+    const lessons = {
+      "merhaba": "Merhaba! Sana nasıl yardımcı olabilirim?",
+      "naber": "İyiyim, sen nasılsın?",
+      "eyvallah": "Eyvallah dostum!",
+      "napıyon": "Her zamanki gibi mutlu ve neşe saçıyorum :) sana nasıl yardımcı olabilirim?",
+      "dostum": "Evet dostum, ne hakkında konuşmak istersin?",
+      "kanka": "Kanka, her zaman buradayım!",
+      "arkadaşım": "Arkadaşım, sorularını bekliyorum.",
+      "adamsın": "Teşekkürler, sen de adamsın!",
+      "kral": "Buyur Kral, sana nasıl yardımcı olabilirim?",
+      "aga": "Efendim Aga, sormak istediğin bir şey var mı?",
+      "nasılsın": "İyiyim, teşekkür ederim! Sen nasılsın?",
+      "selam": "Selam! Neler yapıyorsun?",
+      "hello": "Hello! How can I assist you?",
+      "hi": "Hi there! What can I do for you?",
+      "bonjour": "Bonjour! Comment puis-je vous aider?",
+      "hola": "¡Hola! ¿En qué puedo ayudarte?",
+      "python": "Python programlama dili hakkında ne öğrenmek istersiniz?",
+      "javascript": "JavaScript, web geliştirme için çok popüler bir dildir.",
+      "yapay zeka": "Yapay zeka, makinelerin öğrenmesi ve akıllı davranmasıdır.",
+      "dünya nedir": "Dünya, Güneş Sistemi'nde Güneş'e en yakın üçüncü gezegen olup şu an için üzerinde yaşam ve sıvı su barındırdığı kesin olarak bilinen tek astronomik cisimdir. Radyometrik tarihleme ve diğer kanıtlara göre 4,55 milyar yıldan fazla bir süre önce oluşmuştur.",
+      "hava durumu": "Bugün hava genellikle güneşli ve ılık.",
+      "teşekkürler": "Rica ederim! Başka bir sorunuz var mı?",
+      "matematik nedir": "Matematik; sayılar, felsefe, uzay ve fizik gibi konularla ilgilenir. Matematikçiler ve filozoflar arasında matematiğin kesin kapsamı ve tanımı konusunda görüş ayrılığı vardır. Matematikçiler örüntüleri araştırır ve bunları yeni konjektürler formüle etmekte kullanırlar.",
+      "seni seviyorum": "Buna sevindim :)♥ Fakat ben bir yapay zekayım yinede seni arkadaş olarak görüyorum :)"
+    };
+
+    function addMessage(text, sender) {
+      const div = document.createElement("div");
+      div.className = `message ${sender}`;
+      div.textContent = text;
+
+      const timeSpan = document.createElement("span");
+      timeSpan.className = "timestamp";
+      const now = new Date();
+      timeSpan.textContent = now.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit"
+      });
+      div.appendChild(timeSpan);
+
+      chatMessages.appendChild(div);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function isMathExpression(str) {
+      return /^[\d\s+\-*/().,]+$/.test(str);
+    }
+
+    function calculateMath(expression) {
+      try {
+        const expr = expression.replace(/,/g, ".");
+        const result = Function('"use strict";return (' + expr + ")")();
+        if (typeof result === "number" && isFinite(result)) {
+          return "Sonuç: " + result;
+        } else {
+          return "Geçersiz matematik işlemi.";
+        }
+      } catch {
+        return "Matematik işlemi hesaplanamadı.";
+      }
+    }
+
+    function sendMessage() {
+      const textRaw = messageInput.value.trim();
+      const text = textRaw.toLowerCase();
+      if (!text) return;
+
+      addMessage(textRaw, "user");
+      messageInput.value = "";
+
+      if (isMathExpression(textRaw)) {
+        const cevap = calculateMath(textRaw);
+        setTimeout(() => addMessage(cevap, "bot"), 700);
+        return;
+      }
+
+      let response = "Üzgünüm, bunu anlayamadım. Lütfen başka bir şey deneyin.";
+
+      for (const key in lessons) {
+        if (text.includes(key)) {
+          response = lessons[key];
+          break;
+        }
+      }
+
+      setTimeout(() => addMessage(response, "bot"), 700);
+    }
+
+    messageInput.addEventListener("keydown", function (e) {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+  </script>
+</body>
+</html>
